@@ -31,7 +31,7 @@ def main():
         print "Can't determine video length."
         raise SystemExit
 
-    split_count = math.ceil(video_length/float(split_length))
+    split_count = int(math.ceil(video_length/float(split_length)))
     if(split_count == 1):
         print "Video length is less then the target split length."
         raise SystemExit

@@ -37,6 +37,11 @@ def main():
         raise SystemExit
 
     split_cmd = "ffmpeg -i '"+filename+"' -vcodec copy "
+    try:
+        filebase = ".".join(filename.split(".")[:-1])
+        fileext = filename.split(".")[-1]
+    except IndexError as e:
+        raise IndexError("No . in filename. Error: " + str(e))
     for n in range(0, split_count):
         split_str = ""
         if n == 0:
@@ -45,7 +50,7 @@ def main():
             split_start = split_length * n
         
         split_str += " -ss "+str(split_start)+" -t "+str(split_length) + \
-                    " '"+filename[:-4] + "-" + str(n) + "." + filename[-3:] + \
+                    " '"+filebase + "-" + str(n) + "." + fileext + \
                     "'"
         print "About to run: "+split_cmd+split_str
         output = subprocess.Popen(split_cmd+split_str, shell = True, stdout =

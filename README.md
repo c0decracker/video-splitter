@@ -12,7 +12,10 @@ This splits `big_video_file.mp4` into 10 chunks. Each chunk will be suffixed wit
 
 ## Splitting videos into unequal chunks
 
-In order to create unequal chunks of a video, you'll need to create ***manifest.json*** :
+In order to create unequal chunks of a video, you'll need to create ***manifest.json***.
+
+
+***manifest.json***
 
 ```json
 
@@ -37,6 +40,20 @@ Afterwards run:
 
 This splits `big_video_file.mp4` into 2 video files, video1.mp4 and video2.mp4. The video1.mp4 is a 34 seconds
 clip, starting from 0:00 to 0:34 of the `big_video_file.mp4`.
+
+
+Alternatively, you can use a ***manifest.csv*** file to accomplish the task above.
+
+***manifest.csv***:
+
+```CSV
+
+start_time,length,rename_to
+0,34,video1
+35,22,video2
+
+```
+
 
 #### Manifest Options
 

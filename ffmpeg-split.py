@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import csv
 import subprocess
 import re
 import math
@@ -17,46 +18,52 @@ def split_by_manifest(filename, manifest):
         raise SystemExit
 
     try:
-        with open(manifest, "r") as manifest_file:
-            config = json.load(manifest_file)
+        with open(manifest) as manifest_file:
+            manifest_type = manifest.split(".")[-1]
+            if manifest_type == "json":
+                config = json.load(manifest_file)
+            elif manifest_type == "csv":
+                config = csv.DictReader(manifest_file)
+            else:
+                print "Format not supported. File must be a csv or json file"
+                raise SystemExit
+
+            split_cmd = "ffmpeg -i '"+filename+"' -vcodec copy "
+            split_count = 1
+            split_error = []
+            try:
+                fileext = filename.split(".")[-1]
+            except IndexError as e:
+                raise IndexError("No . in filename. Error: " + str(e))
+            for video_config in config:
+                split_str = ""
+                try:
+                    split_start = video_config["start_time"]
+                    split_length = video_config.get("end_time", None)
+                    if not split_length:
+                        split_length = video_config["length"]
+                    filebase = video_config["rename_to"]
+                    if fileext in filebase:
+                        filebase = ".".join(filebase.split(".")[:-1])
+
+                    split_str += " -ss " + str(split_start) + " -t " + \
+                        str(split_length) + \
+                        " '"+ filebase + "." + fileext + \
+                        "'"
+                    print "About to run: "+split_cmd+split_str
+                    output = subprocess.Popen(split_cmd+split_str,
+                                              shell = True, stdout =
+                                              subprocess.PIPE).stdout.read()
+                except IndexError as e:
+                    print "############# Incorrect format ##############"
+                    print "The format of each json array should be:"
+                    print "{start_time: <int>, length: <int>, rename_to: <string>}"
+                    print "#############################################"
+                    print e
+                    raise SystemExit
     except Exception as e:
         print e
         raise SystemExit
-
-    split_cmd = "ffmpeg -i '"+filename+"' -vcodec copy "
-    split_count = 1
-    split_error = []
-    try:
-        fileext = filename.split(".")[-1]
-    except IndexError as e:
-        raise IndexError("No . in filename. Error: " + str(e))
-
-    for video_config in config:
-        split_str = ""
-        try:
-            split_start = video_config["start_time"]
-            split_length = video_config.get("end_time", None)
-            if not split_length:
-                split_length = video_config["length"]
-            filebase = video_config["rename_to"]
-            if fileext in filebase:
-                filebase = ".".join(filebase.split(".")[:-1])
-
-            split_str += " -ss " + str(split_start) + " -t " + \
-                str(split_length) + \
-                " '"+ filebase + "." + fileext + \
-                "'"
-            print "About to run: "+split_cmd+split_str
-            output = subprocess.Popen(split_cmd+split_str,
-                                      shell = True, stdout =
-                                      subprocess.PIPE).stdout.read()
-        except IndexError as e:
-            print "############# Incorrect format ##############"
-            print "The format of each json array should be:"
-            print "{start_time: <int>, length: <int>, rename_to: <string>}"
-            print "#############################################"
-            print e
-            raise SystemExit
 
 
 

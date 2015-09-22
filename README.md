@@ -63,6 +63,33 @@ start_time,length,rename_to
 * end_time        - end time of the video
 
 
+## Additional Arguments
+
+* -v or --vcodec        ffmpeg video codec to be used.
+* -a or --acodec        ffmpeg audio codec to be used.
+* -m or --manifest      manifest file to control the splitting of videos.
+* -f or --file          video file to split.
+* -s or --split-size    seconds to evenly split the videos
+
+#### Notes:
+
+The -s and -m options should not be used together. If they are, -m option takes
+precedent over the -s option
+
+
+## Known Issues with ffmpeg
+
+* There might be some videos that aren't showing properly after splitting the source video with ffmpeg. To resolve
+this, use the -v option and pass in the associated video codec for the source video or video format. For example, mp4 videos
+use h264 video codec. Therefore, running the command
+`python ffmpeg-split.py -f example.mp4 -s -v h264`, may resolve this issue.
+
+
+## Installing ffmpeg
+
+See [FFmpeg installation guide](https://www.ffmpeg.org/download.html) for details.
+
+
 
 
 [FFMpeg]: https://www.ffmpeg.org/

@@ -139,7 +139,7 @@ def main():
                         action = "store"
                         )
     parser.add_option("-s", "--split-size",
-                        dest = "split_size",
+                        dest = "split_length",
                         help = "Split or chunk size in seconds, for example 10",
                         type = "int",
                         action = "store"
@@ -168,7 +168,7 @@ def main():
 
     if options.filename and options.manifest:
         split_by_manifest(**(options.__dict__))
-    elif options.filename and options.split_size:
+    elif options.filename and options.split_length:
         split_by_seconds(**(options.__dict__))
     else:
         parser.print_help()

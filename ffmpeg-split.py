@@ -13,7 +13,7 @@ length_regexp = 'Duration: (\d{2}):(\d{2}):(\d{2})\.\d+,'
 re_length = re.compile(length_regexp)
 
 def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
-                      **kwargs):
+                      extra="", **kwargs):
     """ Split video into segments based on the given manifest file.
 
     Arguments:
@@ -23,6 +23,7 @@ def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
                             output.
         acodec (str)        - Controls the audio codec for the ffmpeg video
                             output.
+        extra (str)         - Extra options for ffmpeg.
     """
     if not os.path.exists(manifest):
         print "File does not exist: %s" % manifest
@@ -38,9 +39,10 @@ def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
             print "Format not supported. File must be a csv or json file"
             raise SystemExit
 
-        split_cmd = "ffmpeg -i '%s' -vcodec %s -acodec %s -y " % (filename,
+        split_cmd = "ffmpeg -i '%s' -vcodec %s -acodec %s -y %s" % (filename,
                                                                   vcodec,
-                                                                  acodec)
+                                                                  acodec,
+                                                                  extra)
         split_count = 1
         split_error = []
         try:
@@ -83,7 +85,7 @@ def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
 
 
 def split_by_seconds(filename, split_length, vcodec="copy", acodec="copy",
-                     **kwargs):
+                     extra="", **kwargs):
     if split_length and split_length <= 0:
         print "Split length can't be 0"
         raise SystemExit
@@ -107,8 +109,8 @@ def split_by_seconds(filename, split_length, vcodec="copy", acodec="copy",
         print "Video length is less then the target split length."
         raise SystemExit
 
-    split_cmd = "ffmpeg -i '%s' -vcodec %s -acodec %s " % (filename, vcodec,
-                                                           acodec)
+    split_cmd = "ffmpeg -i '%s' -vcodec %s -acodec %s %s" % (filename, vcodec,
+                                                           acodec, extra)
     try:
         filebase = ".".join(filename.split(".")[:-1])
         fileext = filename.split(".")[-1]
@@ -162,6 +164,13 @@ def main():
                       help = "Audio codec to use. ",
                       type = "string",
                       default = "copy",
+                      action = "store"
+                     )
+    parser.add_option("-e", "--extra",
+                      dest = "extra",
+                      help = "extra option. ",
+                      type = "string",
+                      default = "",
                       action = "store"
                      )
     (options, args) = parser.parse_args()

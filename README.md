@@ -8,7 +8,13 @@ Run `python ffmpeg-split.py -h` to see the options. Here are few samples of how 
 
 `python ffmpeg-split.py -f big_video_file.mp4 -s 10`
 
-This splits `big_video_file.mp4` into 10 chunks. Each chunk will be suffixed with numeric index, for example `big_video_file-0.mp4`, `big_video_file-1.mp4`, etc.
+This splits `big_video_file.mp4` into chunks, and the size of chunk is 10 seconds. Each chunk will be suffixed with numeric index, for example `big_video_file-0.mp4`, `big_video_file-1.mp4`, etc.
+
+## Spliting video into euqal chunks with some extra options
+
+`python ffmpeg-split.py -f -i input.mp4 -s 600 -v libx264 -e '-vf "scale=320:240" -threads 8'`
+
+This splits `input.mp4` into chunks, and the size of chunk is 600 seconds. With extra option to scale output to `320:240` and use 8 threads to speed up.
 
 ## Splitting videos into unequal chunks
 
@@ -70,6 +76,7 @@ start_time,length,rename_to
 * -m or --manifest      manifest file to control the splitting of videos.
 * -f or --file          video file to split.
 * -s or --split-size    seconds to evenly split the videos
+* -e or --extra         extra optional options for ffmpeg, e.g. '-e -threads 8' to use 8 threads to speed up.
 
 #### Notes:
 

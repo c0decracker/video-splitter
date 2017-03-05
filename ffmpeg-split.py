@@ -168,7 +168,7 @@ def main():
                      )
     parser.add_option("-e", "--extra",
                       dest = "extra",
-                      help = "extra option. ",
+                      help = "Extra options for ffmpeg, e.g. '-e -threads 8'. ",
                       type = "string",
                       default = "",
                       action = "store"

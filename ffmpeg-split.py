@@ -80,14 +80,18 @@ def get_video_length(filename):
 
     return video_length
 
+def ceildiv(a, b):
+    return int(math.ceil(a / float(b)))
+
 def split_by_seconds(filename, split_length, vcodec="copy", acodec="copy",
-                     extra="", **kwargs):
+                     extra="", video_length=None, **kwargs):
     if split_length and split_length <= 0:
         print "Split length can't be 0"
         raise SystemExit
 
-    video_length = get_video_length(filename)
-    split_count = int(math.ceil(video_length/float(split_length)))
+    if not video_length:
+        video_length = get_video_length(filename)
+    split_count = ceildiv(video_length, split_length)
     if(split_count == 1):
         print "Video length is less then the target split length."
         raise SystemExit
@@ -127,6 +131,35 @@ def main():
                         type = "int",
                         action = "store"
                         )
+    parser.add_option("-c", "--split-chunks",
+                        dest = "split_chunks",
+                        help = "Number of chunks to split to",
+                        type = "int",
+                        action = "store"
+                        )
+    parser.add_option("-S", "--split-filesize",
+                        dest = "split_filesize",
+                        help = "Split or chunk size in bytes (approximate)",
+                        type = "int",
+                        action = "store"
+                        )
+    parser.add_option("--filesize-factor",
+                        dest = "filesize_factor",
+                        help = "with --split-filesize, use this factor in time to" \
+                               " size heuristics [default: %default]",
+                        type = "float",
+                        action = "store",
+                        default = 0.95
+                        )
+    parser.add_option("--chunk-strategy",
+                        dest = "chunk_strategy",
+                        help = "with --split-filesize, allocate chunks according to" \
+                               " given strategy (eager or even)",
+                        type = "choice",
+                        action = "store",
+                        choices = ['eager', 'even'],
+                        default = 'eager'
+                        )
     parser.add_option("-m", "--manifest",
                       dest = "manifest",
                       help = "Split video based on a json manifest file. ",
@@ -156,13 +189,32 @@ def main():
                      )
     (options, args) = parser.parse_args()
 
-    if options.filename and options.manifest:
-        split_by_manifest(**(options.__dict__))
-    elif options.filename and options.split_length:
-        split_by_seconds(**(options.__dict__))
-    else:
+    def bailout():
         parser.print_help()
         raise SystemExit
+
+    if not options.filename:
+        bailout()
+
+    if options.manifest:
+        split_by_manifest(**(options.__dict__))
+    else:
+        video_length = None
+        if not options.split_length:
+            video_length = get_video_length(options.filename)
+            file_size = os.stat(options.filename).st_size
+            split_filesize = None
+            if options.split_filesize:
+                split_filesize = int(options.split_filesize * options.filesize_factor)
+            if split_filesize and options.chunk_strategy == 'even':
+                options.split_chunks = ceildiv(file_size, split_filesize)
+            if options.split_chunks:
+                options.split_length = ceildiv(video_length, options.split_chunks)
+            if not options.split_length and split_filesize:
+                options.split_length = int(split_filesize / float(file_size) * video_length)
+        if not options.split_length:
+            bailout()
+        split_by_seconds(video_length=video_length, **(options.__dict__))
 
 if __name__ == '__main__':
     main()

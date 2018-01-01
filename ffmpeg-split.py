@@ -2,15 +2,12 @@
 
 import csv
 import subprocess
-import re
 import math
 import json
 import os
+import shlex
 from optparse import OptionParser
 
-
-length_regexp = 'Duration: (\d{2}):(\d{2}):(\d{2})\.\d+,'
-re_length = re.compile(length_regexp)
 
 def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
                       extra="", **kwargs):
@@ -39,18 +36,15 @@ def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
             print "Format not supported. File must be a csv or json file"
             raise SystemExit
 
-        split_cmd = "ffmpeg -i '%s' -vcodec %s -acodec %s -y %s" % (filename,
-                                                                  vcodec,
-                                                                  acodec,
-                                                                  extra)
-        split_count = 1
-        split_error = []
+        split_cmd = ["ffmpeg", "-i", filename, "-vcodec", vcodec,
+                     "-acodec", acodec, "-y"] + shlex.split(extra)
         try:
             fileext = filename.split(".")[-1]
         except IndexError as e:
             raise IndexError("No . in filename. Error: " + str(e))
         for video_config in config:
             split_str = ""
+            split_args = []
             try:
                 split_start = video_config["start_time"]
                 split_length = video_config.get("end_time", None)
@@ -60,16 +54,12 @@ def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
                 if fileext in filebase:
                     filebase = ".".join(filebase.split(".")[:-1])
 
-                split_str += " -ss " + str(split_start) + " -t " + \
-                    str(split_length) + \
-                    " '"+ filebase + "." + fileext + \
-                    "'"
+                split_args += ["-ss", str(split_start), "-t",
+                    str(split_length), filebase + "." + fileext]
                 print "########################################################"
-                print "About to run: "+split_cmd+split_str
+                print "About to run: "+" ".join(split_cmd+split_args)
                 print "########################################################"
-                output = subprocess.Popen(split_cmd+split_str,
-                                          shell = True, stdout =
-                                          subprocess.PIPE).stdout.read()
+                subprocess.check_output(split_cmd+split_args)
             except KeyError as e:
                 print "############# Incorrect format ##############"
                 if manifest_type == "json":
@@ -82,7 +72,13 @@ def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
                 print e
                 raise SystemExit
 
+def get_video_length(filename):
 
+    output = subprocess.check_output(("ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", filename)).strip()
+    video_length = int(float(output))
+    print "Video length in seconds: "+str(video_length)
+
+    return video_length
 
 def split_by_seconds(filename, split_length, vcodec="copy", acodec="copy",
                      extra="", **kwargs):
@@ -90,45 +86,29 @@ def split_by_seconds(filename, split_length, vcodec="copy", acodec="copy",
         print "Split length can't be 0"
         raise SystemExit
 
-    output = subprocess.Popen("ffmpeg -i '"+filename+"' 2>&1 | grep 'Duration'",
-                            shell = True,
-                            stdout = subprocess.PIPE
-                            ).stdout.read()
-    print output
-    matches = re_length.search(output)
-    if matches:
-        video_length = int(matches.group(1)) * 3600 + \
-                        int(matches.group(2)) * 60 + \
-                        int(matches.group(3))
-        print "Video length in seconds: "+str(video_length)
-    else:
-        print "Can't determine video length."
-        raise SystemExit
+    video_length = get_video_length(filename)
     split_count = int(math.ceil(video_length/float(split_length)))
     if(split_count == 1):
         print "Video length is less then the target split length."
         raise SystemExit
 
-    split_cmd = "ffmpeg -i '%s' -vcodec %s -acodec %s %s" % (filename, vcodec,
-                                                           acodec, extra)
+    split_cmd = ["ffmpeg", "-i", filename, "-vcodec", vcodec, "-acodec", acodec] + shlex.split(extra)
     try:
         filebase = ".".join(filename.split(".")[:-1])
         fileext = filename.split(".")[-1]
     except IndexError as e:
         raise IndexError("No . in filename. Error: " + str(e))
     for n in range(0, split_count):
-        split_str = ""
+        split_args = []
         if n == 0:
             split_start = 0
         else:
             split_start = split_length * n
 
-        split_str += " -ss "+str(split_start)+" -t "+str(split_length) + \
-                    " '"+filebase + "-" + str(n) + "." + fileext + \
-                    "'"
-        print "About to run: "+split_cmd+split_str
-        output = subprocess.Popen(split_cmd+split_str, shell = True, stdout =
-                               subprocess.PIPE).stdout.read()
+        split_args += ["-ss", str(split_start), "-t", str(split_length),
+                       filebase + "-" + str(n) + "." + fileext]
+        print "About to run: "+" ".join(split_cmd+split_args)
+        subprocess.check_output(split_cmd+split_args)
 
 
 def main():

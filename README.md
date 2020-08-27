@@ -12,7 +12,7 @@ This splits `big_video_file.mp4` into chunks, and the size of chunk is 10 second
 
 ## Spliting video into equal chunks with some extra options
 
-`python ffmpeg-split.py -f -i input.mp4 -s 600 -v libx264 -e '-vf "scale=320:240" -threads 8'`
+`python ffmpeg-split.py -f input.mp4 -s 600 -v libx264 -e '-vf "scale=320:240" -threads 8'`
 
 This splits `input.mp4` into chunks, and the size of chunk is 600 seconds. With extra option to scale output to `320:240` and use 8 threads to speed up.
 

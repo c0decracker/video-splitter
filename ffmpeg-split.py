@@ -12,7 +12,7 @@ from optparse import OptionParser
 
 
 def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
-                      extra=""):
+                      extra="", **kwargs):
     """ Split video into segments based on the given manifest file.
 
     Arguments:
@@ -88,7 +88,7 @@ def ceildiv(a, b):
 
 
 def split_by_seconds(filename, split_length, vcodec="copy", acodec="copy",
-                     extra="", video_length=None):
+                     extra="", video_length=None, **kwargs):
     if split_length and split_length <= 0:
         print("Split length can't be 0")
         raise SystemExit

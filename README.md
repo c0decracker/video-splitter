@@ -29,7 +29,7 @@ In order to create unequal chunks of a video, you'll need to create ***manifest.
     {
         "start_time": 0,
         "length": 34,
-        "rename_to": "video1"
+        "rename_to": "video1.mp4"
     },
     {
         "start_time": 35,

@@ -108,7 +108,17 @@ def get_video_length(filename):
     return video_length
 
 
-def ceildiv(a, b):
+def ceildiv(a: float, b: float) -> float:
+    """Helper function to simplify ceiling division.
+
+    See math.ceil for more information.
+    Args:
+        a (float): The dividend.
+        b (float): The divisor, must be strictly > 0.
+
+    Returns:
+        float: The quotient of a and b.
+    """
     return int(math.ceil(a / float(b)))
 
 

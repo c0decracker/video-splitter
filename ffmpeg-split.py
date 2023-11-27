@@ -36,8 +36,7 @@ def split_by_manifest(
         elif manifest_type == "csv":
             config = csv.DictReader(manifest_file)
         else:
-            print("Format not supported. File must be a csv or json file")
-            raise SystemExit
+            raise SystemExit("Format not supported. File must be a csv or json file")
 
         split_cmd = [
             "ffmpeg",
@@ -86,8 +85,7 @@ def split_by_manifest(
                     print("start_time,length,rename_to should be the first line ")
                     print("in the csv file.")
                 print("#############################################")
-                print(e)
-                raise SystemExit
+                raise SystemExit(e)
 
 
 def get_video_length(filename):
@@ -124,8 +122,7 @@ def split_by_seconds(
     **kwargs
 ):
     if split_length and split_length <= 0:
-        print("Split length can't be 0")
-        raise SystemExit
+        raise SystemExit("Split length can't be 0")
 
     if not video_length:
         video_length = get_video_length(filename)
@@ -133,8 +130,7 @@ def split_by_seconds(
     split_count = ceildiv(video_length, split_length)
 
     if split_count == 1:
-        print("Video length is less then the target split length.")
-        raise SystemExit
+        raise SystemExit("Video length is less then the target split length.")
 
     split_cmd = [
         "ffmpeg",

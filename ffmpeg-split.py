@@ -275,7 +275,7 @@ def main():
         action="store",
     )
 
-    options, args = parser.parse_args()
+    options, _ = parser.parse_args()
 
     def bailout():
         parser.print_help()

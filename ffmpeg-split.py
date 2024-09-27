@@ -11,13 +11,14 @@ import subprocess
 from optparse import OptionParser
 
 
-def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
+def split_by_manifest(filename, manifest, output_dir=None, vcodec="copy", acodec="copy",
                       extra="", **kwargs):
     """ Split video into segments based on the given manifest file.
 
     Arguments:
         filename (str)      - Location of the video.
         manifest (str)      - Location of the manifest file.
+        output_dir (str)    - Directory to save the split files.
         vcodec (str)        - Controls the video codec for the ffmpeg video
                             output.
         acodec (str)        - Controls the audio codec for the ffmpeg video
@@ -27,6 +28,10 @@ def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
     if not os.path.exists(manifest):
         print("File does not exist: %s" % manifest)
         raise SystemExit
+
+    # Ensure the output directory exists
+    if output_dir and not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
     with open(manifest) as manifest_file:
         manifest_type = manifest.split(".")[-1]
@@ -44,6 +49,7 @@ def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
             fileext = filename.split(".")[-1]
         except IndexError as e:
             raise IndexError("No . in filename. Error: " + str(e))
+
         for video_config in config:
             split_args = []
             try:
@@ -55,8 +61,10 @@ def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
                 if fileext in filebase:
                     filebase = ".".join(filebase.split(".")[:-1])
 
+                output_path = os.path.join(output_dir, filebase + "." + fileext) if output_dir else filebase + "." + fileext
+
                 split_args += ["-ss", str(split_start), "-t",
-                               str(split_length), filebase + "." + fileext]
+                               str(split_length), output_path]
                 print("########################################################")
                 print("About to run: " + " ".join(split_cmd + split_args))
                 print("########################################################")
@@ -87,7 +95,7 @@ def ceildiv(a, b):
     return int(math.ceil(a / float(b)))
 
 
-def split_by_seconds(filename, split_length, vcodec="copy", acodec="copy",
+def split_by_seconds(filename, split_length, output_dir=None, vcodec="copy", acodec="copy",
                      extra="", video_length=None, **kwargs):
     if split_length and split_length <= 0:
         print("Split length can't be 0")
@@ -99,6 +107,10 @@ def split_by_seconds(filename, split_length, vcodec="copy", acodec="copy",
     if split_count == 1:
         print("Video length is less then the target split length.")
         raise SystemExit
+
+    # Ensure the output directory exists
+    if output_dir and not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
     split_cmd = ["ffmpeg", "-i", filename, "-vcodec", vcodec, "-acodec", acodec] + shlex.split(extra)
     try:
@@ -113,9 +125,9 @@ def split_by_seconds(filename, split_length, vcodec="copy", acodec="copy",
         else:
             split_start = split_length * n
 
-        split_args += ["-ss", str(split_start), "-t", str(split_length),
-                       filebase + "-" + str(n + 1) + "-of-" +
-                       str(split_count) + "." + fileext]
+        output_path = os.path.join(output_dir, f"{filebase}-{n+1}-of-{split_count}.{fileext}") if output_dir else f"{filebase}-{n+1}-of-{split_count}.{fileext}"
+
+        split_args += ["-ss", str(split_start), "-t", str(split_length), output_path]
         print("About to run: " + " ".join(split_cmd + split_args))
         subprocess.check_output(split_cmd + split_args)
 
@@ -167,6 +179,12 @@ def main():
     parser.add_option("-m", "--manifest",
                       dest="manifest",
                       help="Split video based on a json manifest file. ",
+                      type="string",
+                      action="store"
+                      )
+    parser.add_option("-o", "--output-dir",
+                      dest="output_dir",
+                      help="Directory to save split files.",
                       type="string",
                       action="store"
                       )
